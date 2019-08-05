@@ -13,42 +13,41 @@ object VariableDynamic extends App {
   val Spark: SparkSession = getSparkSession()
   import Spark.implicits._
 
-  val PlazaList = getInputPlazaList.persist(StorageLevel.DISK_ONLY)
+  val PlazaList = getInputPlazaList.collect().toList
   println("Input Plaza File Load Success")
   val InputData = getInputData.persist(StorageLevel.DISK_ONLY)
   println("Input Data File Load Success")
 
-  PlazaList.foreach { x =>
+  PlazaList.map { x =>
     val PlazalistSplit = x.mkString.split(";")
     val inputPlaza = PlazalistSplit(0)
     //    "60001"
     val PerfomanceDate = PlazalistSplit(1)
     //    "2018-08-10"
-    val Beta = PlazalistSplit(2).split(",")
-    val Cutoff = PlazalistSplit(3)
 
     println("Started Running for Plaza:" + inputPlaza)
 
-    val CustomInputData = InputData.filter($"PLAZACODE" === inputPlaza && $"EXITTXNDATE".toString().substring(0, 10) < PerfomanceDate).persist(StorageLevel.DISK_ONLY)
+    val CustomInputData = InputData.filter($"PLAZACODE" === inputPlaza)
+      .filter(x => x(2).toString().substring(0, 10) < PerfomanceDate).persist(StorageLevel.DISK_ONLY)
     println("CustomInputData Is Ready")
 
     val DistinctTag = CustomInputData.map(x => (x(0)).toString()).distinct().toDF("tag")
 
-    val daysOfProportion = DaysOfProportion(CustomInputData, inputPlaza, PerfomanceDate, Spark)
-    val pre1to7 = Pre1to7(CustomInputData, inputPlaza, PerfomanceDate, Spark)
-    val samestate = SameState(CustomInputData, inputPlaza, PerfomanceDate, Spark)
-    val discount = Discount(CustomInputData, inputPlaza, PerfomanceDate, Spark)
-    val txnOnPerformanceDate = TxnOnPerformanceDate(InputData, inputPlaza, PerfomanceDate, Spark)
-    val lastPlaza = LastPlaza(InputData, inputPlaza, PerfomanceDate, Spark)
-    val distanceFromPreviousTxn = DistanceFromPreviousTxn(InputData, inputPlaza, PerfomanceDate, Spark)
+    val daysOfProportion = DaysOfProportion(CustomInputData, inputPlaza, PerfomanceDate)
+    val pre1to7 = Pre1to7(CustomInputData, inputPlaza, PerfomanceDate)
+    val samestate = SameState(CustomInputData, inputPlaza, PerfomanceDate)
+    val discount = Discount(CustomInputData, inputPlaza, PerfomanceDate)
+    val txnOnPerformanceDate = TxnOnPerformanceDate(InputData, inputPlaza, PerfomanceDate)
+    val lastPlaza = LastPlaza(InputData, inputPlaza, PerfomanceDate)
+    val distanceFromPreviousTxn = DistanceFromPreviousTxn(InputData, inputPlaza, PerfomanceDate)
 
-    val variables = DistinctTag.join(txnOnPerformanceDate, Seq("tag"), "left outer")
-      .join(distanceFromPreviousTxn, Seq("tag"), "left outer")
-      .join(daysOfProportion, Seq("tag"), "left outer")
-      .join(pre1to7, Seq("tag"), "left outer")
-      .join(samestate, Seq("tag"), "left outer")
-      .join(discount, Seq("tag"), "left outer")
-      .join(lastPlaza, Seq("tag"), "left outer")
+    val variables = DistinctTag.join(txnOnPerformanceDate, Seq("tag"), "left_outer")
+      .join(distanceFromPreviousTxn, Seq("tag"), "left_outer")
+      .join(daysOfProportion, Seq("tag"), "left_outer")
+      .join(pre1to7, Seq("tag"), "left_outer")
+      .join(samestate, Seq("tag"), "left_outer")
+      .join(discount, Seq("tag"), "left_outer")
+      .join(lastPlaza, Seq("tag"), "left_outer")
       .na.fill(0)
 
     writeToCSV(variables, inputPlaza, PerfomanceDate)

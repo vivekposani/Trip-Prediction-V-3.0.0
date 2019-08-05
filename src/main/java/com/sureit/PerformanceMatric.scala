@@ -8,7 +8,8 @@ import org.apache.spark.sql.SQLContext
 
 object PerformanceMatric {
 
-  def apply(Spark: SparkSession) = {
+  def apply = {
+    val Spark: SparkSession = getSparkSession()
 
     val plazalist = getInputPlaza.collect().toList
 
@@ -74,7 +75,7 @@ object PerformanceMatric {
 
     }
     import Spark.sqlContext.implicits._
-    
+
     val Output = Spark.sparkContext.parallelize(x).toDF("Plaza", "Date", "Event", "Predict", "TrueNegitive", "TruePositive", "Type1", "Type2", "Accuracy", "Sensitivity", "FPR", "OPR", "F1")
 
     Output
@@ -85,15 +86,16 @@ object PerformanceMatric {
 
   }
 
-  def getSparkSession(): SparkSession = {
+  def getSparkSession() = {
     SparkSession
       .builder
       .appName("SparkSQL")
+      //      .master("local[*]")
       .master("spark://192.168.70.21:7077")
-      .config("spark.submit.deployMode", "cluster")
+      .config("spark.submit.deployMode", "client")
+      .config("spark.task.maxFailures", "6")
       .config("spark.executor.memory", "36g")
-      .config("spark.driver.cores", "4")
-      .config("spark.driver.memory", "4g")
+      .config("spark.driver.port", "8083")
       .config("spark.sql.warehouse.dir", "hdfs://192.168.70.21:9000/vivek/temp")
       .getOrCreate()
   }

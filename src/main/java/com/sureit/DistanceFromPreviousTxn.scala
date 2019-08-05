@@ -10,13 +10,14 @@ object DistanceFromPreviousTxn {
 
   case class Record(tag: String, plaza: String, date: String, time: String)
 
-  def apply(InputData: Dataset[Row], inputPlaza: String, PerfomanceDate: String, Spark: SparkSession) = {
+  def apply(InputData: Dataset[Row], inputPlaza: String, PerfomanceDate: String) = {
+    val Spark:SparkSession = getSparkSession()
     import Spark.implicits._
 
     val prevDay = LocalDate.parse(PerfomanceDate).minusDays(1).toString()
 
     val customizedInputData = InputData
-      .map(x => (x(0), x(1), x(2).toString().substring(0, 10), x(2).toString().substring(10)))
+      .map(x => (x(0).toString(), x(1).toString(), x(2).toString().substring(0, 10), x(2).toString().substring(10)))
       .filter(x => (x._3 == prevDay))
       .distinct
       .toDF("tag", "plaza", "date", "time")
@@ -49,4 +50,19 @@ object DistanceFromPreviousTxn {
 
     distanceRDD
   }
+
+  def getSparkSession() = {
+    SparkSession
+      .builder
+      .appName("SparkSQL")
+      //      .master("local[*]")
+      .master("spark://192.168.70.21:7077")
+      .config("spark.submit.deployMode", "client")
+      .config("spark.task.maxFailures", "6")
+      .config("spark.executor.memory", "36g")
+      .config("spark.driver.port", "8083")
+      .config("spark.sql.warehouse.dir", "hdfs://192.168.70.21:9000/vivek/temp")
+      .getOrCreate()
+  }
+
 }

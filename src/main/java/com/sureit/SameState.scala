@@ -6,7 +6,8 @@ import org.apache.spark.sql.functions._
 
 object SameState {
 
-  def apply(CustomInputData: Dataset[Row], inputPlaza: String, PerfomanceDate: String, Spark: SparkSession) = {
+  def apply(CustomInputData: Dataset[Row], inputPlaza: String, PerfomanceDate: String) = {
+    val Spark:SparkSession = getSparkSession()
     import Spark.implicits._
 
     val CustomizedInputData = CustomInputData
@@ -18,9 +19,24 @@ object SameState {
     val TRIPS_COUNT = trips_count1.select("tag", "TRIPS>1")
 
     val distinctTag = CustomizedInputData.distinct
-    val same_state = distinctTag.join(TRIPS_COUNT, Seq("tag"), "left outer")
+    val same_state = distinctTag.join(TRIPS_COUNT, Seq("tag"), "left_outer")
 
     same_state
 
   }
+
+  def getSparkSession() = {
+    SparkSession
+      .builder
+      .appName("SparkSQL")
+      //      .master("local[*]")
+      .master("spark://192.168.70.21:7077")
+      .config("spark.submit.deployMode", "client")
+      .config("spark.task.maxFailures", "6")
+      .config("spark.executor.memory", "36g")
+      .config("spark.driver.port", "8083")
+      .config("spark.sql.warehouse.dir", "hdfs://192.168.70.21:9000/vivek/temp")
+      .getOrCreate()
+  }
+
 }

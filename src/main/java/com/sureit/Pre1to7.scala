@@ -8,8 +8,9 @@ import java.time.{ LocalDate, Period }
 import scala.util.Try
 
 object Pre1to7 {
-  
-  def apply(CustomInputData: Dataset[Row], inputPlaza: String, PerfomanceDate: String, Spark: SparkSession) = {
+
+  def apply(CustomInputData: Dataset[Row], inputPlaza: String, PerfomanceDate: String) = {
+    val Spark: SparkSession = getSparkSession()
     import Spark.implicits._
 
     val CustomizedInputData = CustomInputData
@@ -42,4 +43,19 @@ object Pre1to7 {
     prevGroup
 
   }
+
+  def getSparkSession() = {
+    SparkSession
+      .builder
+      .appName("SparkSQL")
+      //      .master("local[*]")
+      .master("spark://192.168.70.21:7077")
+      .config("spark.submit.deployMode", "client")
+      .config("spark.task.maxFailures", "6")
+      .config("spark.executor.memory", "36g")
+      .config("spark.driver.port", "8083")
+      .config("spark.sql.warehouse.dir", "hdfs://192.168.70.21:9000/vivek/temp")
+      .getOrCreate()
+  }
+
 }

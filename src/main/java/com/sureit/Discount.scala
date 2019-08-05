@@ -8,11 +8,12 @@ object Discount {
 
   case class Record(tag: String, time: String, discount: String)
 
-  def apply(CustomInputData: Dataset[Row], inputPlaza: String, PerfomanceDate: String, Spark: SparkSession) = {
+  def apply(CustomInputData: Dataset[Row], inputPlaza: String, PerfomanceDate: String) = {
+    val Spark: SparkSession = getSparkSession()
     import Spark.implicits._
 
-    val CustomizedInputData = CustomInputData.filter($"Discountcode" === "0")
-      .map(x => (x(0), x(2), x(4)))
+    val CustomizedInputData = CustomInputData.filter($"DISCOUNTCODE" > "0")
+      .map(x => (x(0).toString, x(2).toString, x(4).toString))
       .toDF("tag", "time", "discount")
 
     val tagWithDiscount = CustomizedInputData.as[Record]
@@ -32,4 +33,19 @@ object Discount {
     discountVariables
 
   }
+
+  def getSparkSession() = {
+    SparkSession
+      .builder
+      .appName("SparkSQL")
+      //      .master("local[*]")
+      .master("spark://192.168.70.21:7077")
+      .config("spark.submit.deployMode", "client")
+      .config("spark.task.maxFailures", "6")
+      .config("spark.executor.memory", "36g")
+      .config("spark.driver.port", "8083")
+      .config("spark.sql.warehouse.dir", "hdfs://192.168.70.21:9000/vivek/temp")
+      .getOrCreate()
+  }
+
 }

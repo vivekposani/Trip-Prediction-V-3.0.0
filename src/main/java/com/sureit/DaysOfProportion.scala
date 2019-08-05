@@ -8,11 +8,12 @@ import java.time.{ LocalDate, Period }
 
 object DaysOfProportion {
 
-  def apply(CustomInputData: Dataset[Row], inputPlaza: String, PerfomanceDate: String, Spark: SparkSession) = {
+  def apply(CustomInputData: Dataset[Row], inputPlaza: String, PerfomanceDate: String) = {
+    val Spark: SparkSession = getSparkSession()
     import Spark.implicits._
 
     val MaxDate = LocalDate.parse(PerfomanceDate).minusMonths(3).toString()
-    val CustomizedInputData = CustomInputData
+    val CustomizedInputData = CustomInputData.filter(CustomInputData.col("EXITTXNDATE").substr(1, 10) < MaxDate)
       .map(x => (x(0).toString(), x(2).toString().substring(0, 10)))
       .distinct()
       .toDF("tag", "time")
@@ -23,6 +24,19 @@ object DaysOfProportion {
     val daysProportionDF = tagCountDiff.select($"tag", bround(($"count" / $"diff"), 7) as "dp").withColumn("dplog", bround(log(10, "dp"), 7))
 
     daysProportionDF
+  }
+
+  def getSparkSession() = {
+    SparkSession
+      .builder
+      .appName("SparkSQL")
+      //      .master("local[*]")
+      .master("spark://192.168.70.21:7077")
+      .config("spark.submit.deployMode", "client")
+      .config("spark.task.maxFailures", "6")
+      .config("spark.driver.port", "8083")
+      .config("spark.sql.warehouse.dir", "hdfs://192.168.70.21:9000/vivek/temp")
+      .getOrCreate()
   }
 
 }

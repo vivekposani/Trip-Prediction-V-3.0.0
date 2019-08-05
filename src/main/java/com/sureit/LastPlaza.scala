@@ -6,13 +6,13 @@ import org.apache.spark.sql.functions._
 
 object LastPlaza {
 
-  def apply(InputData: Dataset[Row], inputPlaza: String, PerfomanceDate: String, Spark: SparkSession) = {
+  def apply(InputData: Dataset[Row], inputPlaza: String, PerfomanceDate: String) = {
+    val Spark: SparkSession = getSparkSession()
     import Spark.implicits._
 
     val inputDataFiltered = InputData
       .filter(x => (x(2).toString().substring(0, 10) < PerfomanceDate))
       .map(x => (x(0).toString(), x(1).toString(), x(2).toString()))
-
 
     val lastPlazaTime = inputDataFiltered.groupByKey(x => x._1)
       .reduceGroups((x, y) => if (x._3 > y._3) { x } else { y })
@@ -22,4 +22,19 @@ object LastPlaza {
     lastPlazaTime
 
   }
+
+  def getSparkSession() = {
+    SparkSession
+      .builder
+      .appName("SparkSQL")
+      //      .master("local[*]")
+      .master("spark://192.168.70.21:7077")
+      .config("spark.submit.deployMode", "client")
+      .config("spark.task.maxFailures", "6")
+      .config("spark.executor.memory", "36g")
+      .config("spark.driver.port", "8083")
+      .config("spark.sql.warehouse.dir", "hdfs://192.168.70.21:9000/vivek/temp")
+      .getOrCreate()
+  }
+
 }
