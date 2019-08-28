@@ -55,35 +55,37 @@ object VariableDynamic extends App {
   }
 
   def getSparkSession() = {
-
     SparkSession
       .builder
       .appName("SparkSQL")
       .master("local[*]")
+      .config("spark.task.maxFailures", "6")
+      //      .master("spark://192.168.70.32:7077")
       //      .config("spark.submit.deployMode", "cluster")
       //      .config("spark.executor.memory", "36g")
-      .config("spark.sql.warehouse.dir", "hdfs://192.168.70.21:9000/vivek/temp")
+      //      .config("spark.driver.port", "8083")
+      //      .config("spark.executor.port", "8084")
+      .config("spark.sql.warehouse.dir", "hdfs://192.168.70.32:9000/vivek/temp")
       .getOrCreate()
-
   }
 
   def getInputPlazaList = {
 
     val spark = getSparkSession()
-    spark.read.option("header", "true").csv("hdfs://192.168.70.21:9000/vivek/INSIGHT/CSV/Plaza.txt")
+    spark.read.option("header", "true").csv("hdfs://192.168.70.32:9000/vivek/INSIGHT/CSV/Plaza.txt")
 
   }
 
   def getInputData = {
 
     val spark = getSparkSession()
-    spark.read.option("header", "true").csv("hdfs://192.168.70.21:9000/vivek/INSIGHT/CSV/TagPlazaTimeStateDiscountClassTxn.csv")
+    spark.read.option("header", "true").csv("hdfs://192.168.70.32:9000/vivek/INSIGHT/CSV/TagPlazaTimeStateDiscountClassTxn.csv")
 
   }
 
   def writeToCSV(df: DataFrame, plaza: String, date: String): Unit = {
 
-    val folder = "hdfs://192.168.70.21:9000/vivek/Implementation/" + plaza + "/" + date + "/"
+    val folder = "hdfs://192.168.70.32:9000/vivek/Implementation/" + plaza + "/" + date + "/"
     df.repartition(1).write.format("csv").mode("overwrite").option("header", "true").save(folder)
 
   }

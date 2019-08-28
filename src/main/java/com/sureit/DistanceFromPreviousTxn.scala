@@ -46,7 +46,7 @@ object DistanceFromPreviousTxn {
 
   def getplazaDistance(Spark: SparkSession) = {
 
-    val distanceRDD = Spark.sparkContext.textFile("hdfs://192.168.70.21:9000/vivek/INSIGHT/CSV/PlazaCodeDistance.txt").map(_.split(",")).map(x => (x(0), x(1), x(2).toFloat))
+    val distanceRDD = Spark.sparkContext.textFile("hdfs://192.168.70.32:9000/vivek/INSIGHT/CSV/PlazaCodeDistance.txt").map(_.split(",")).map(x => (x(0), x(1), x(2).toFloat))
 
     distanceRDD
   }
@@ -56,12 +56,14 @@ object DistanceFromPreviousTxn {
       .builder
       .appName("SparkSQL")
       //      .master("local[*]")
-      .master("spark://192.168.70.21:7077")
-      .config("spark.submit.deployMode", "client")
+      .master("local[*]")
       .config("spark.task.maxFailures", "6")
-      .config("spark.executor.memory", "36g")
-      .config("spark.driver.port", "8083")
-      .config("spark.sql.warehouse.dir", "hdfs://192.168.70.21:9000/vivek/temp")
+      //      .master("spark://192.168.70.32:7077")
+      //      .config("spark.submit.deployMode", "cluster")
+      //      .config("spark.executor.memory", "36g")
+      //      .config("spark.driver.port", "8083")
+      //      .config("spark.executor.port", "8084")
+      .config("spark.sql.warehouse.dir", "hdfs://192.168.70.32:9000/vivek/temp")
       .getOrCreate()
   }
 

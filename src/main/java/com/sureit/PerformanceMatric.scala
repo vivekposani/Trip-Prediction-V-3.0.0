@@ -8,10 +8,8 @@ import org.apache.spark.sql.SQLContext
 
 object PerformanceMatric {
 
-  def apply = {
+  def apply(plazalist: List[String]) = {
     val Spark: SparkSession = getSparkSession()
-
-    val plazalist = getInputPlaza.collect().toList
 
     val url = "jdbc:sqlserver://192.168.70.15:1433; database=SUREIT"
     val properties = new Properties()
@@ -90,19 +88,20 @@ object PerformanceMatric {
     SparkSession
       .builder
       .appName("SparkSQL")
-      //      .master("local[*]")
-      .master("spark://192.168.70.21:7077")
-      .config("spark.submit.deployMode", "client")
+      .master("local[*]")
       .config("spark.task.maxFailures", "6")
-      .config("spark.executor.memory", "36g")
-      .config("spark.driver.port", "8083")
-      .config("spark.sql.warehouse.dir", "hdfs://192.168.70.21:9000/vivek/temp")
+      //      .master("spark://192.168.70.32:7077")
+      //      .config("spark.submit.deployMode", "cluster")
+      //      .config("spark.executor.memory", "36g")
+      //      .config("spark.driver.port", "8083")
+      //      .config("spark.executor.port", "8084")
+      .config("spark.sql.warehouse.dir", "hdfs://192.168.70.32:9000/vivek/temp")
       .getOrCreate()
   }
 
   def getInputData(plaza: String, date: String) = {
     val spark = getSparkSession()
-    spark.sparkContext.textFile("hdfs://192.168.70.7:9000/vivek/Implementation/" + plaza + "/" + date + "/")
+    spark.sparkContext.textFile("hdfs://192.168.70.32:9000/vivek/Implementation/" + plaza + "/" + date + "/")
       .map(_.split(","))
       .map(x => (x(0), x(1), x(20)))
   }
@@ -110,7 +109,7 @@ object PerformanceMatric {
   def getInputPlaza = {
 
     val spark = getSparkSession()
-    spark.sparkContext.textFile("hdfs://192.168.70.7:9000/vivek/INSIGHT/CSV/Plaza.csv")
+    spark.sparkContext.textFile("hdfs://192.168.70.32:9000/vivek/INSIGHT/CSV/Plaza.csv")
 
   }
 
