@@ -45,7 +45,8 @@ object Discount {
       //      .config("spark.executor.memory", "36g")
       //      .config("spark.driver.port", "8083")
       //      .config("spark.executor.port", "8084")
-      .config("spark.sql.warehouse.dir", "hdfs://192.168.70.32:9000/vivek/temp")
+      .config("spark.sql.warehouse.dir", "hdfs://192.168.70.24:9000/vivek/temp")
+      .config("spark.local.dir", "vivek/temp")
       .getOrCreate()
 
   }

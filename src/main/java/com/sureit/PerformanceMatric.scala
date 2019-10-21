@@ -22,12 +22,13 @@ object PerformanceMatric {
 
     val x = plazalist.map { x =>
 
-      val plazaWithBetaArray = x.split(";")
-      val plaza = plazaWithBetaArray(0)
-      val date = plazaWithBetaArray(1)
+      val PlazalistSplit = x.split(";")
+      val plaza = PlazalistSplit(0)
+      val date = PlazalistSplit(1)
+      val model = PlazalistSplit(4)
       //    println(date)
 
-      val Input = getInputData(plaza, date)
+      val Input = getInputData(model, plaza, date)
         .mapPartitionsWithIndex {
           (idx, iter) => if (idx == 0) iter.drop(1) else iter
         }
@@ -95,13 +96,14 @@ object PerformanceMatric {
       //      .config("spark.executor.memory", "36g")
       //      .config("spark.driver.port", "8083")
       //      .config("spark.executor.port", "8084")
-      .config("spark.sql.warehouse.dir", "hdfs://192.168.70.32:9000/vivek/temp")
+      .config("spark.sql.warehouse.dir", "hdfs://192.168.70.24:9000/vivek/temp")
+      .config("spark.local.dir", "vivek/temp")
       .getOrCreate()
   }
 
-  def getInputData(plaza: String, date: String) = {
+  def getInputData(model: String, plaza: String, date: String) = {
     val spark = getSparkSession()
-    spark.sparkContext.textFile("hdfs://192.168.70.32:9000/vivek/Implementation/" + plaza + "/" + date + "/")
+    spark.sparkContext.textFile("hdfs://192.168.70.24:9000/vivek/Implementation/" + plaza + "/" + model + "/" + date + "/")
       .map(_.split(","))
       .map(x => (x(0), x(1), x(20)))
   }
@@ -109,7 +111,7 @@ object PerformanceMatric {
   def getInputPlaza = {
 
     val spark = getSparkSession()
-    spark.sparkContext.textFile("hdfs://192.168.70.32:9000/vivek/INSIGHT/CSV/Plaza.csv")
+    spark.sparkContext.textFile("hdfs://192.168.70.24:9000/vivek/INSIGHT/CSV/Plaza.csv")
 
   }
 
